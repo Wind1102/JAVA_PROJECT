@@ -36,10 +36,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ex.getBindingResult().getFieldErrors().stream().map(error -> {
             String enumKey = error.getDefaultMessage();
             ErrorCode errorCode = ErrorCode.INVALID_KEY;
-            try{
+            try {
                 errorCode = ErrorCode.valueOf(enumKey);
-            }
-            catch (IllegalArgumentException e){
+            } catch (IllegalArgumentException e) {
 
             }
 
