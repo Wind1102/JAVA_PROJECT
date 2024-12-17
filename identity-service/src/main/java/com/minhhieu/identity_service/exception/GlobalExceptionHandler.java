@@ -1,5 +1,6 @@
 package com.minhhieu.identity_service.exception;
 
+import com.minhhieu.identity_service.dto.request.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,18 +15,38 @@ import java.util.stream.Collectors;
 @ControllerAdvice()
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handlingRuntimeException(Exception ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse> handlingRuntimeException(Exception ex) {
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
+        apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiResponse> handlingAppException(AppException ex) {
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setMessage(ex.getMessage());
+        apiResponse.setCode(ex.getErrorCode().getCode());
+        return ResponseEntity.badRequest().body(apiResponse);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<List<Map<String,String>>> handlingMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<List<ApiResponse>> handlingMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         return ResponseEntity.badRequest().body(ex.getBindingResult().getFieldErrors().stream().map(error -> {
-            Map<String, String> fieldError = new HashMap<>();
-            fieldError.put("field", error.getField());
-            fieldError.put("message", error.getDefaultMessage());
-            return fieldError;
+            String enumKey = error.getDefaultMessage();
+            ErrorCode errorCode = ErrorCode.INVALID_KEY;
+            try{
+                errorCode = ErrorCode.valueOf(enumKey);
+            }
+            catch (IllegalArgumentException e){
+
+            }
+
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(errorCode.getCode());
+            apiResponse.setMessage(errorCode.getMessage());
+            return apiResponse;
         }).collect(Collectors.toList()));
     }
 }

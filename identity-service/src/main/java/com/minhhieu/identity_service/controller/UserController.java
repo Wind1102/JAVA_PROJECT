@@ -1,5 +1,6 @@
 package com.minhhieu.identity_service.controller;
 
+import com.minhhieu.identity_service.dto.request.ApiResponse;
 import com.minhhieu.identity_service.dto.request.UserCreationRequest;
 import com.minhhieu.identity_service.dto.request.UserUpdateRequest;
 import com.minhhieu.identity_service.entity.Users;
@@ -17,8 +18,10 @@ public class UserController {
     private UserService userService;
 
     @PostMapping()
-    Users createUser(@RequestBody @Valid UserCreationRequest request){
-        return userService.createRequet(request);
+    ApiResponse<Users> createUser(@RequestBody @Valid UserCreationRequest request){
+        ApiResponse<Users> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.createRequet(request));
+        return apiResponse;
     }
 
     @GetMapping()

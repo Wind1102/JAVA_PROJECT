@@ -1,7 +1,10 @@
 package com.minhhieu.identity_service.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse <T> {
-    private int code;
+    private int code = 0;
     private String message;
     private T result;
 

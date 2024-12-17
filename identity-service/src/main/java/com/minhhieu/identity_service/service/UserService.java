@@ -1,15 +1,16 @@
 package com.minhhieu.identity_service.service;
 
+import com.minhhieu.identity_service.exception.AppException;
 import com.minhhieu.identity_service.dto.request.UserCreationRequest;
 import com.minhhieu.identity_service.dto.request.UserUpdateRequest;
 import com.minhhieu.identity_service.entity.Users;
+import com.minhhieu.identity_service.exception.ErrorCode;
 import com.minhhieu.identity_service.mapper.UserMapper;
 import com.minhhieu.identity_service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 public class UserService {
@@ -22,7 +23,7 @@ public class UserService {
     public Users createRequet(UserCreationRequest request){
         Users user = new Users();
         if(userRepository.existsByUsername(request.getUsername())){
-            throw new RuntimeException("Username already exists");
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
