@@ -3,6 +3,8 @@ package com.minhhieu.identity_service.exception;
 public enum ErrorCode {
 
     INVALID_KEY(-1,"Invalid key"),
+    INVALID_USERNAME(404, "User Exists"),
+    WRONG_PASSWORD(400, "Wrong password"),
     UNCATEGORIZED_EXCEPTION(9999,"Uncategorized error"),
     USER_EXISTED(1001,"USER already existed"),
     USERNAME_INVALID(1002,"Username must be at least 3 characters"),

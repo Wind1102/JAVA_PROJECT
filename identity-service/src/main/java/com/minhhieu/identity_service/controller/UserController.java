@@ -1,6 +1,6 @@
 package com.minhhieu.identity_service.controller;
 
-import com.minhhieu.identity_service.dto.request.ApiResponse;
+import com.minhhieu.identity_service.dto.response.ApiResponse;
 import com.minhhieu.identity_service.dto.response.UserResponse;
 import com.minhhieu.identity_service.dto.request.UserCreationRequest;
 import com.minhhieu.identity_service.dto.request.UserUpdateRequest;
@@ -11,7 +11,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

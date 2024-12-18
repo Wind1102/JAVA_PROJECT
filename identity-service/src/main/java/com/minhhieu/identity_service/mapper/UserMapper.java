@@ -4,10 +4,8 @@ import com.minhhieu.identity_service.dto.request.UserCreationRequest;
 import com.minhhieu.identity_service.dto.request.UserUpdateRequest;
 import com.minhhieu.identity_service.dto.response.UserResponse;
 import com.minhhieu.identity_service.entity.Users;
-import org.apache.catalina.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValueMappingStrategy;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

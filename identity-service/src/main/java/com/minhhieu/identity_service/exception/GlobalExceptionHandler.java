@@ -1,15 +1,12 @@
 package com.minhhieu.identity_service.exception;
 
-import com.minhhieu.identity_service.dto.request.ApiResponse;
+import com.minhhieu.identity_service.dto.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @ControllerAdvice()
