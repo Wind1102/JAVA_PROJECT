@@ -23,7 +23,7 @@ public class Users {
     String lastName;
     LocalDate dob;
 
-    
-    Set<String> roles;
+    @ManyToMany
+    Set<Role> roles;
 
 }
