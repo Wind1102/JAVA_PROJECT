@@ -4,6 +4,7 @@ import com.minhhieu.identity_service.dto.request.AuthenticationRequest;
 import com.minhhieu.identity_service.dto.request.IntrospectRequest;
 import com.minhhieu.identity_service.dto.response.AuthenticationResponse;
 import com.minhhieu.identity_service.dto.response.IntrospectResponse;
+import com.minhhieu.identity_service.entity.InvalidatedToken;
 import com.minhhieu.identity_service.entity.Users;
 import com.minhhieu.identity_service.exception.AppException;
 import com.minhhieu.identity_service.exception.ErrorCode;
@@ -19,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.type.TrueFalseConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,9 +30,7 @@ import org.springframework.util.CollectionUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Date;
-import java.util.StringJoiner;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,19 +38,17 @@ import java.util.StringJoiner;
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
 public class AuthenticationService {
     @NonFinal
-    protected static final String SIGN_KEY = "mbiyI+XlRjF7TNK2KV2Cq+9hF2x3QbHH5gBOJLgwuk4DBFiW01D33z9qE5pZmSB+";
+    @Value("${jwt.signerKey}")
+    protected static String SIGN_KEY;
 
     UserRepository userRepository;
 
     public IntrospectResponse introspect(IntrospectRequest request)
             throws JOSEException, ParseException {
         var token = request.getToken();
-        JWSVerifier verifier = new MACVerifier(SIGN_KEY.getBytes());
-        SignedJWT signedJWT = SignedJWT.parse(token);
-        var verified = signedJWT.verify(verifier);
-        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        SignedJWT signedJWT = verifyToken(token);
         return IntrospectResponse.builder()
-                .valid(verified && expirationTime.after(new Date()))
+                .valid(true)
                 .build();
     }
 
@@ -76,6 +75,7 @@ public class AuthenticationService {
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("scope",buildScope(user))
                 .build();
         Payload payload = new Payload(jwtClaimSet.toJSONObject());
@@ -87,6 +87,21 @@ public class AuthenticationService {
             log.error("Cannot create token",e);
             throw new RuntimeException(e);
         }
+    }
+
+    public void logout(Object request) {
+
+    }
+
+    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+        JWSVerifier verifier = new MACVerifier(SIGN_KEY.getBytes());
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        Date experyTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        var verified = signedJWT.verify(verifier);
+        if(!verified && experyTime.after(new Date())){
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        return signedJWT;
     }
 
     private String buildScope(Users user){

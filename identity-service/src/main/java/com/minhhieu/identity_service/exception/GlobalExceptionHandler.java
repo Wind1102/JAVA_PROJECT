@@ -9,12 +9,16 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice()
 public class GlobalExceptionHandler {
+    private final String MIN_ATTRIBUTE = "min";
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handlingRuntimeException(Exception ex) {
@@ -50,22 +54,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ex.getBindingResult().getFieldErrors().stream().map(error -> {
             String enumKey = error.getDefaultMessage();
             ErrorCode errorCode = ErrorCode.INVALID_KEY;
-            ApiResponse apiResponse = new ApiResponse();
+            Map<String,Object> attributes = null;
             try {
                 errorCode = ErrorCode.valueOf(enumKey);
                 var constraintViolations = ex.getBindingResult().getAllErrors().getFirst().unwrap(ConstraintViolation.class);
-                var attrs = constraintViolations.getConstraintDescriptor().getAttributes();
-                var min_age = attrs.get("min");
-                var message = String.format(errorCode.getMessage(),min_age.toString());
-                log.info(min_age.toString());
-                log.info(message);
-                apiResponse.setCode(errorCode.getCode());
-                apiResponse.setMessage(message);
+
+                attributes = constraintViolations.getConstraintDescriptor().getAttributes();
+
             } catch (IllegalArgumentException e) {
 
             }
-
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setCode(errorCode.getCode());
+            apiResponse.setMessage(Objects.nonNull(attributes)?mapAttribute(errorCode.getMessage(), attributes):errorCode.getMessage());
             return apiResponse;
         }).collect(Collectors.toList()));
     }
+
+    private String mapAttribute(String message, Map<String,Object> attributes ){
+        String minValue = String.valueOf(attributes.get(MIN_ATTRIBUTE));
+        return message.replace("{" + MIN_ATTRIBUTE + "}", minValue);
+    }
+
 }

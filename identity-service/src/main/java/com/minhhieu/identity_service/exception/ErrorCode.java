@@ -17,7 +17,7 @@ public enum ErrorCode {
     PASSWORD_INVALID(1003,"Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1005,"Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1006,"You do not have permission", HttpStatus.FORBIDDEN),
-    INVALID_DOB(1008,"Your age must be at least %s years old.", HttpStatus.BAD_REQUEST),
+    INVALID_DOB(1008,"Your age must be at least {min} years old.", HttpStatus.BAD_REQUEST),
     ;
 
 
