@@ -20,8 +20,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PermissionService {
 
-    PermissionRepository permissionRepository;
-    PermissionMapper permissionMapper;
+    final PermissionRepository permissionRepository;
+    final PermissionMapper permissionMapper;
 
     public PermissionReponse create(PermissionRequest request){
         Permission permission = permissionMapper.toPermission(request);

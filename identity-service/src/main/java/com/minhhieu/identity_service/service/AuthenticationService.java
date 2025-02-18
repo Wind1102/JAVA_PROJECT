@@ -2,17 +2,20 @@ package com.minhhieu.identity_service.service;
 
 import com.minhhieu.identity_service.dto.request.AuthenticationRequest;
 import com.minhhieu.identity_service.dto.request.IntrospectRequest;
+import com.minhhieu.identity_service.dto.request.LogoutRequest;
 import com.minhhieu.identity_service.dto.response.AuthenticationResponse;
 import com.minhhieu.identity_service.dto.response.IntrospectResponse;
 import com.minhhieu.identity_service.entity.InvalidatedToken;
 import com.minhhieu.identity_service.entity.Users;
 import com.minhhieu.identity_service.exception.AppException;
 import com.minhhieu.identity_service.exception.ErrorCode;
+import com.minhhieu.identity_service.repository.InvalidateTokenRepository;
 import com.minhhieu.identity_service.repository.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.crypto.impl.HMAC;
+import com.nimbusds.jose.jwk.JWKException;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.AccessLevel;
@@ -24,6 +27,7 @@ import org.hibernate.type.TrueFalseConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -39,9 +43,10 @@ import java.util.*;
 public class AuthenticationService {
     @NonFinal
     @Value("${jwt.signerKey}")
-    protected static String SIGN_KEY;
+    protected String SIGN_KEY;
 
     UserRepository userRepository;
+    InvalidateTokenRepository invalidateTokenRepository;
 
     public IntrospectResponse introspect(IntrospectRequest request)
             throws JOSEException, ParseException {
@@ -89,8 +94,14 @@ public class AuthenticationService {
         }
     }
 
-    public void logout(Object request) {
-
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signedToken = verifyToken(request.getToken());
+        String jit = signedToken.getJWTClaimsSet().getJWTID();
+        Date experyTime = signedToken.getJWTClaimsSet().getExpirationTime();
+        invalidateTokenRepository.save(InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(experyTime)
+                .build());
     }
 
     private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
@@ -101,14 +112,23 @@ public class AuthenticationService {
         if(!verified && experyTime.after(new Date())){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
+        var id = signedJWT.getJWTClaimsSet().getJWTID();
+        if(invalidateTokenRepository.existsById(id)){
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
         return signedJWT;
     }
 
     private String buildScope(Users user){
         StringJoiner stringJoiner = new StringJoiner(" ");
-//        if(!CollectionUtils.isEmpty(user.getRoles())){
-//            user.getRoles().forEach(stringJoiner::add);
-//        }
+        if(!CollectionUtils.isEmpty(user.getRoles())){
+            user.getRoles().forEach(role -> {
+                stringJoiner.add("ROLE_" + role.getName());
+                if(!CollectionUtils.isEmpty(role.getPermissions())){
+                    role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
+                }
+            });
+        }
         return stringJoiner.toString();
     }
 }
