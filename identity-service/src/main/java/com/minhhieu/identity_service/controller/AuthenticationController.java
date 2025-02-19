@@ -2,6 +2,7 @@ package com.minhhieu.identity_service.controller;
 
 import com.minhhieu.identity_service.dto.request.IntrospectRequest;
 import com.minhhieu.identity_service.dto.request.LogoutRequest;
+import com.minhhieu.identity_service.dto.request.RefreshTokenRequest;
 import com.minhhieu.identity_service.dto.response.ApiResponse;
 import com.minhhieu.identity_service.dto.request.AuthenticationRequest;
 import com.minhhieu.identity_service.dto.response.AuthenticationResponse;
@@ -49,4 +50,11 @@ public class AuthenticationController {
         authenticationService.logout(request);
         return ApiResponse.<Void>builder().build();
     }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshTokenRequest request) throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+    }
+
 }

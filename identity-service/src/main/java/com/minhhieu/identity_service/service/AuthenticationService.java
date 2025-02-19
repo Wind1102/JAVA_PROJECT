@@ -3,6 +3,8 @@ package com.minhhieu.identity_service.service;
 import com.minhhieu.identity_service.dto.request.AuthenticationRequest;
 import com.minhhieu.identity_service.dto.request.IntrospectRequest;
 import com.minhhieu.identity_service.dto.request.LogoutRequest;
+import com.minhhieu.identity_service.dto.request.RefreshTokenRequest;
+import com.minhhieu.identity_service.dto.response.ApiResponse;
 import com.minhhieu.identity_service.dto.response.AuthenticationResponse;
 import com.minhhieu.identity_service.dto.response.IntrospectResponse;
 import com.minhhieu.identity_service.entity.InvalidatedToken;
@@ -94,6 +96,21 @@ public class AuthenticationService {
         }
     }
 
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException {
+        var signedJWT  = verifyToken(request.getToken());
+        String jit = signedJWT.getJWTClaimsSet().getJWTID();
+        Date experyTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        var userName = signedJWT.getJWTClaimsSet().getSubject();
+        var user = userRepository.findByUsername(userName).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+        String token = generateToken(user);
+        invalidateTokenRepository.save(InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(experyTime)
+                .build());
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+
+    }
+
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         var signedToken = verifyToken(request.getToken());
         String jit = signedToken.getJWTClaimsSet().getJWTID();
@@ -123,7 +140,7 @@ public class AuthenticationService {
         StringJoiner stringJoiner = new StringJoiner(" ");
         if(!CollectionUtils.isEmpty(user.getRoles())){
             user.getRoles().forEach(role -> {
-                stringJoiner.add("ROLE_" + role.getName());
+                stringJoiner.add(role.getName());
                 if(!CollectionUtils.isEmpty(role.getPermissions())){
                     role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
                 }
