@@ -32,7 +32,7 @@ public class UserService {
     PasswordEncoder passwordEncoder;
 
     public Users createRequet(UserCreationRequest request){
-
+        log.info("Service: Create User");
         if(userRepository.existsByUsername(request.getUsername())){
             throw new AppException(ErrorCode.USER_EXISTED);
         }

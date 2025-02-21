@@ -1,0 +1,23 @@
+<configuration>
+
+    <!-- File Appender (Ghi log vào file) -->
+    <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/var/logs/identity_service.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <immediateFlush>true</immediateFlush>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Mỗi ngày tạo file log mới -->
+            <fileNamePattern>logs/application-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- Giữ log trong 7 ngày -->
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Redirect toàn bộ log từ Console sang File -->
+    <root level="info">
+        <appender-ref ref="ROLLING_FILE"/>
+    </root>
+</configuration>
